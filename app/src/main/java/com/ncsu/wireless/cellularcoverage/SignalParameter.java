@@ -30,7 +30,6 @@ public class SignalParameter extends ActionBarActivity {
         }
 
         addListenerOnButton();
-
     }
 
     public void addListenerOnButton() {
@@ -48,18 +47,23 @@ public class SignalParameter extends ActionBarActivity {
 
                 // find the radiobutton by returned id
                 radioSignalButton = (RadioButton) findViewById(selectedId);
-                String radioSignalButtonValue = (String) radioSignalButton.getText();
-
-                Intent intent = new Intent(SignalParameter.this, MapDisplay.class);
+                String radioSignalButtonValuesStr = (String) radioSignalButton.getText();
+                String radioSignalButtonValue = null;
+                if (radioSignalButtonValuesStr.equals("Signal Strength")) {
+                    radioSignalButtonValue = "signalStrength";
+                } else if (radioSignalButtonValuesStr.equals("Download Speed")) {
+                    radioSignalButtonValue = "downloadSpeed";
+                } else if (radioSignalButtonValuesStr.equals("Upload Speed")) {
+                    radioSignalButtonValue = "uploadSpeed";
+                }
+                Intent intent = new Intent(SignalParameter.this, DateForm.class);
+                System.out.println(radioSignalButtonValue);
                 intent.putExtra("var_carrier", var_carrier);
                 intent.putExtra("signal_parameter", radioSignalButtonValue);
                 startActivity(intent);
-
-
-//                Toast.makeText(SignalParameter.this,radioSignalButton.getText(), Toast.LENGTH_SHORT).show();
-
             }
-        });
+        }
+        );
 
     }
 

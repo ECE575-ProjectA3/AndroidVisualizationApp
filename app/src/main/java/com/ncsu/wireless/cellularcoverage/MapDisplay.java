@@ -1,38 +1,39 @@
 package com.ncsu.wireless.cellularcoverage;
 
-import android.app.DownloadManager;
 import android.content.Context;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.StrictMode;
-import android.provider.SyncStateContract;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.widget.TextView;
-
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.ncsu.wireless.cellularcoverage.R;
-
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.InputStreamReader;
 
 public class MapDisplay extends FragmentActivity {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    private String ServerData;
+    private String var_carrier;
+    private String var_parameter;
+    private String url;
+    private JSONArray jsonarray = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,39 +43,56 @@ public class MapDisplay extends FragmentActivity {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
         }
+
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            var_carrier = extras.getString("var_carrier");
+            var_parameter = extras.getString("var_parameter");
+            url = extras.getString("url");
+        }
+
         //get details from server using httprequest
         try {
             getDataFromServer();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         setUpMapIfNeeded();
     }
 
     private void getDataFromServer() throws IOException {
-        URL url = new URL("http://ece575a3.ddns.net:8080/testRequest/");
-        HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-        try {
-            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-            ServerData = readStream(in);
-        }
-        finally {
-            urlConnection.disconnect();
-        }
-    }
 
-    private String readStream(InputStream is) {
-        try {
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            int i = is.read();
-            while(i != -1) {
-                bo.write(i);
-                i = is.read();
+        //String url = "http://ece575a3.ddns.net:8080/request?carrier=testRequest&type=signalStrength";
+
+        HttpClient httpClient = new DefaultHttpClient();
+
+        try{
+            HttpGet httpGet = new HttpGet(url);
+            HttpResponse httpResponse = httpClient.execute(httpGet);
+            HttpEntity httpEntity = httpResponse.getEntity();
+
+            if(httpEntity != null) {
+
+
+                InputStream inputStream = httpEntity.getContent();
+
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder stringBuilder = new StringBuilder();
+
+                String dataVar = bufferedReader.readLine();
+                while (dataVar != null) {
+                    stringBuilder.append(dataVar + " \n");
+                    dataVar = bufferedReader.readLine();
+                }
+                bufferedReader.close();
+
+                jsonarray = new JSONArray(stringBuilder.toString());
             }
-            return bo.toString();
-        } catch (IOException e) {
-            return "";
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+
     }
 
     @Override
@@ -112,49 +130,80 @@ public class MapDisplay extends FragmentActivity {
         }
     }
 
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p/>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-     */
     private void setUpMap() {
-        System.out.println("Hi Saran\n");
-        System.out.println(ServerData);
-        Pattern pattern = Pattern.compile("\\{(.*?)\\}");
-        Matcher matcher = pattern.matcher(ServerData);
 
-        // Find all matches
-        while (matcher.find()) {
-            // Get the matching string
-            String match = matcher.group(1);
-            Pattern pattern2 = Pattern.compile("\"latitude\":(.*),\"signalStrengthLevel\":(.*),\"longtitude\":(.*)");
-            Matcher matcher2 = pattern2.matcher(match);
-            while (matcher2.find()) {
-                Double latitude = Double.parseDouble(matcher2.group(1));
-                Integer signalStrengthLevel = Integer.parseInt(matcher2.group(2));
-                Double longtitude = Double.parseDouble(matcher2.group(3));
-                System.out.println("Latitude:" + latitude);
-                System.out.println("SignalStrengthLevel:" + signalStrengthLevel);
-                System.out.println("Longitude:" + longtitude);
-                mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longtitude)).title("Check"));
+        Double latitude;
+        Double longitude;
+        Integer dataValue;
+        String dateTime;
+        String dataType;
+        JSONObject jsonResponse;
+        for (int i = 0; i < jsonarray.length(); i++) {
+            try {
+                jsonResponse = jsonarray.getJSONObject(i);
+                latitude = jsonResponse.getDouble("latitude");
+                longitude = jsonResponse.getDouble("longitude");
+                dataValue = jsonResponse.getInt("dataValue");
+                dataType = jsonResponse.getString("dataType");
+                dateTime = jsonResponse.getString("dateTime");
+                Float color;
+                if (dataType.equals("signalStrength")) {
+                    if (dataValue == 3) {
+                        color = Float.parseFloat("120.0");
+                    } else if (dataValue == 2) {
+                        color = Float.parseFloat("60.0");
+                    } else if (dataValue == 1) {
+                        color = Float.parseFloat("0.0");
+                    } else {
+                        color = Float.parseFloat("300.0");
+                    }
+                    if (dataValue > 0 && dataValue <= 3) {
+                        mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(var_carrier + ", " +
+                                var_parameter + ", " + dateTime).icon(BitmapDescriptorFactory.defaultMarker(color)));
+                    }
+                } else if (dataType.equals("downloadSpeed")) {
+                    if (dataValue > 6) {
+                        color = Float.parseFloat("120.0");
+                    } else if (dataValue <= 6 && dataValue > 2) {
+                        color = Float.parseFloat("60.0");
+                    } else {
+                        color = Float.parseFloat("0.0");
+                    }
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(var_carrier + ", " +
+                            var_parameter + ", " + dateTime).icon(BitmapDescriptorFactory.defaultMarker(color)));
+                } else if (dataType.equals("uploadSpeed")) {
+                    if (dataValue > 3) {
+                        color = Float.parseFloat("120.0");
+                    } else if (dataValue <= 3 && dataValue > 1) {
+                        color = Float.parseFloat("60.0");
+                    } else {
+                        color = Float.parseFloat("0.0");
+                    }
+                    mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(var_carrier + ", " +
+                            var_parameter + ", " + dateTime).icon(BitmapDescriptorFactory.defaultMarker(color)));
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
+        /*
+        public static final float HUE_AZURE Constant Value: 210.0
+        public static final float HUE_BLUE Constant Value: 240.0
+        public static final float HUE_CYAN Constant Value: 180.0
+        public static final float HUE_GREEN Constant Value: 120.0
+        public static final float HUE_MAGENTA Constant Value: 300.0
+        public static final float HUE_ORANGE Constant Value: 30.0
+        public static final float HUE_RED Constant Value: 0.0
+        public static final float HUE_ROSE Constant Value: 330.0
+        public static final float HUE_VIOLET Constant Value: 270.0
+        public static final float HUE_YELLOW Constant Value: 60.0
+        */
     }
 
     private void centerMapOnMyLocation() {
 
         mMap.setMyLocationEnabled(true);
 
-        Location loc = mMap.getMyLocation();
-
-        if (loc != null) {
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(loc.getLatitude(), loc.getLongitude()), 14.0f));
-        } else {
-            System.out.println("Hey you are stuck here");
-        }
-
-        /*
         /////----------------------------------Zooming camera to position user-----------------
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -168,14 +217,11 @@ public class MapDisplay extends FragmentActivity {
 
             CameraPosition cameraPosition = new CameraPosition.Builder()
                     .target(new LatLng(location.getLatitude(), location.getLongitude()))      // Sets the center of the map to location user
-                    .zoom(17)                   // Sets the zoom
-                    .bearing(90)                // Sets the orientation of the camera to east
-                    .tilt(40)                   // Sets the tilt of the camera to 30 degrees
+                    .zoom(15)                   // Sets the zoom
                     .build();                   // Creates a CameraPosition from the builder
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
         }
-*/
 /////----------------------------------Zooming camera to position user-----------------
     }
 

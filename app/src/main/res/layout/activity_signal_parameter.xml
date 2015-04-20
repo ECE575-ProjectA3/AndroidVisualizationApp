@@ -22,13 +22,13 @@
             android:id="@+id/radioDelay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/radio_delay" />
+            android:text="@string/radio_download" />
 
         <RadioButton
             android:id="@+id/radioThroughput"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/radio_throughput" />
+            android:text="@string/radio_upload" />
 
     </RadioGroup>
 
@@ -36,7 +36,7 @@
         android:id="@+id/btnDisplay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/btn_display"
+        android:text="@string/btn_display0"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"/>
 
