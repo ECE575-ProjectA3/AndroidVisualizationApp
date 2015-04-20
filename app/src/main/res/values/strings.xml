@@ -1,13 +1,8 @@
 <resources>
     <string name="app_name">Cellular Coverage</string>
-
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="txtUserName">User Name</string>
-    <string name="txtPwd">Password</string>
     <string name="txtFromDate">From Date (Optional)</string>
     <string name="txtToDate">To Date (Optional)</string>
-    <string name="txtEmail">Email ID</string>
     <string name="radio_signal">Signal Strength</string>
     <string name="radio_download">Download Speed</string>
     <string name="radio_upload">Upload Speed</string>
