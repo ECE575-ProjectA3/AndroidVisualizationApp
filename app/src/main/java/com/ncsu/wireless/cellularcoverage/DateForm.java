@@ -8,6 +8,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 
 public class DateForm extends ActionBarActivity {
 
@@ -15,7 +18,7 @@ public class DateForm extends ActionBarActivity {
     private String toDate;
     private String var_carrier;
     private String var_parameter;
-    private String url = "http://ece575a3.ddns.net:8080/";
+    private String url;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,29 +42,26 @@ public class DateForm extends ActionBarActivity {
                 fromDate = fromDateText.getText().toString();
                 toDate = toDateText.getText().toString();
 
-                System.out.println("Date:" +fromDate);
-                System.out.println(toDate);
-
-                /* validate Date
-                if (isValidDate(fromDate) && isValidDate(toDate)) {
-                    emailEditText.setError("Invalid Email");
+                // validate Date
+                if (!(isValidDate(fromDate))) {
+                    fromDateText.setError("Invalid Date");
+                } else if (!(isValidDate(toDate)))  {
+                    toDateText.setError("Invalid Date");
                 } else {
-                    emailEditText.setError("Invalid Date");
+                    parseInput();
+                    Intent new_intent = new Intent(DateForm.this,MapDisplay.class);
+                    System.out.println("The URL: "+url);
+                    new_intent.putExtra("url", url);
+                    new_intent.putExtra("var_carrier", var_carrier);
+                    new_intent.putExtra("var_parameter", var_parameter);
+                    startActivity(new_intent);
                 }
-
-                */
-                parseInput();
-                Intent new_intent = new Intent(DateForm.this,MapDisplay.class);
-                System.out.println("The URL: "+url);
-                new_intent.putExtra("url", url);
-                new_intent.putExtra("var_carrier", var_carrier);
-                new_intent.putExtra("var_parameter", var_parameter);
-                startActivity(new_intent);
             }
         });
     }
 
     public void parseInput() {
+        url = "http://ece575a3.ddns.net:8080/";
         url += "request?carrier="+var_carrier + "&type="+var_parameter;
         //only include non-empty parameters
         if(!(fromDate.equals(""))) {
@@ -72,10 +72,15 @@ public class DateForm extends ActionBarActivity {
         }
     }
 
-    public boolean isValidDate(String date) {
-        if (true) {
+    public static boolean isValidDate(String text) {
+        if (text.equals(""))
             return true;
-        } else {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+        df.setLenient(false);
+        try {
+            df.parse(text);
+            return true;
+        } catch (ParseException ex) {
             return false;
         }
     }

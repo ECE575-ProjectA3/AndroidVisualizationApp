@@ -60,7 +60,7 @@ public class CarrierList extends ActionBarActivity {
 
     void getCarrierNames()
     {
-        carrierNameList.add("TEST REQUEST");
+        //carrierNameList.add("TEST REQUEST");
         carrierNameList.add("SPRINT");
         carrierNameList.add("VERIZON");
         carrierNameList.add("T-MOBILE");

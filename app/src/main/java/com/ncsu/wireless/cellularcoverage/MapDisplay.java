@@ -1,5 +1,6 @@
 package com.ncsu.wireless.cellularcoverage;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.location.Criteria;
 import android.location.Location;
@@ -7,6 +8,8 @@ import android.location.LocationManager;
 import android.os.StrictMode;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.widget.Toast;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -185,6 +188,14 @@ public class MapDisplay extends FragmentActivity {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+        }
+        if (jsonarray.length() == 0) {
+            Context context = getApplicationContext();
+            CharSequence text = "No Data to display for selected carrier and/or selected dates";
+            int duration = Toast.LENGTH_LONG;
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
+            toast.show();
         }
         /*
         public static final float HUE_AZURE Constant Value: 210.0
