@@ -21,12 +21,13 @@ public class CarrierList extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_carrier_list);
 
-        // Get the reference of CarrierListView
+        // Get the reference ID of CarrierListView
         ListView carrierList=(ListView)findViewById(R.id.list_Carriers);
 
-
+        // populate the carrier list in an array list
         carrierNameList = new ArrayList<String>();
         getCarrierNames();
+
         // Create The Adapter with passing ArrayList as 3rd parameter
         ArrayAdapter<String> arrayAdapter =
                 new ArrayAdapter<String>(this,android.R.layout.simple_list_item_checked, carrierNameList);
@@ -37,7 +38,6 @@ public class CarrierList extends ActionBarActivity {
         carrierList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             // argument position gives the index of item which is clicked
             public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
-                Intent intent = new Intent(CarrierList.this, SignalParameter.class);
                 String selectedCarrier;
                 if (carrierNameList.get(position).equals("SPRINT")){
                     selectedCarrier = "Sprint";
@@ -52,15 +52,18 @@ public class CarrierList extends ActionBarActivity {
                 } else {
                     selectedCarrier = "testRequest";
                 }
+                /// Create Intent for SignalParameter Activity and Start The Activity.
+                /// Also pass the carrier selected to the next activity in a variable
+                Intent intent = new Intent(CarrierList.this, SignalParameter.class);
                 intent.putExtra("var_carrier", selectedCarrier);
                 startActivity(intent);
             }
         });
     }
 
-    void getCarrierNames()
-    {
-        //carrierNameList.add("TEST REQUEST");
+    void getCarrierNames() {
+        // Function to add the carriers to the arraylist
+        carrierNameList.add("TEST REQUEST");
         carrierNameList.add("SPRINT");
         carrierNameList.add("VERIZON");
         carrierNameList.add("T-MOBILE");
@@ -78,9 +81,9 @@ public class CarrierList extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        // Handle action bar item clicks here. The action bar will automatically
+        // handle clicks, as long as you specify a parent activity in AndroidManifest.xml.
+
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement

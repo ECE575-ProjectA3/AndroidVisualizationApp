@@ -42,11 +42,13 @@ public class MapDisplay extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_display);
+        // check for SDK version for using google maps API
         if (android.os.Build.VERSION.SDK_INT > 9) {
             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
             StrictMode.setThreadPolicy(policy);
         }
 
+        // Get the variables passed from the previous activity
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             var_carrier = extras.getString("var_carrier");
@@ -61,28 +63,28 @@ public class MapDisplay extends FragmentActivity {
             e.printStackTrace();
         }
 
+        //set up the map and the markers using the data returned from server
         setUpMapIfNeeded();
     }
 
     private void getDataFromServer() throws IOException {
 
-        //String url = "http://ece575a3.ddns.net:8080/request?carrier=testRequest&type=signalStrength";
+        //Format of url is "http://ece575a3.ddns.net:8080/request?carrier=testRequest&type=signalStrength";
 
         HttpClient httpClient = new DefaultHttpClient();
 
         try{
+            // get the data from the server using http get request
             HttpGet httpGet = new HttpGet(url);
             HttpResponse httpResponse = httpClient.execute(httpGet);
             HttpEntity httpEntity = httpResponse.getEntity();
 
             if(httpEntity != null) {
 
-
                 InputStream inputStream = httpEntity.getContent();
-
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
                 StringBuilder stringBuilder = new StringBuilder();
-
+                // put the data received from the server into a buffer and convert into a string
                 String dataVar = bufferedReader.readLine();
                 while (dataVar != null) {
                     stringBuilder.append(dataVar + " \n");
@@ -90,6 +92,7 @@ public class MapDisplay extends FragmentActivity {
                 }
                 bufferedReader.close();
 
+                // construct a JSON array object based on the string received from the server
                 jsonarray = new JSONArray(stringBuilder.toString());
             }
         } catch (JSONException e) {
@@ -100,6 +103,7 @@ public class MapDisplay extends FragmentActivity {
 
     @Override
     protected void onResume() {
+        // Set up map to display map on resume
         super.onResume();
         setUpMapIfNeeded();
     }
@@ -125,8 +129,9 @@ public class MapDisplay extends FragmentActivity {
             // Try to obtain the map from the SupportMapFragment.
             mMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map))
                     .getMap();
+            // use this method to center the map to current user location
             centerMapOnMyLocation();
-            // Check if we were successful in obtaining the map.
+            // call setupMap method to successfully mark the data points on the map.
             if (mMap != null) {
                 setUpMap();
             }
@@ -134,84 +139,100 @@ public class MapDisplay extends FragmentActivity {
     }
 
     private void setUpMap() {
-
+        //This function successfully marks the data points on the map.
         Double latitude;
         Double longitude;
         Integer dataValue;
         String dateTime;
         String dataType;
-        JSONObject jsonResponse;
-        for (int i = 0; i < jsonarray.length(); i++) {
-            try {
-                jsonResponse = jsonarray.getJSONObject(i);
-                latitude = jsonResponse.getDouble("latitude");
-                longitude = jsonResponse.getDouble("longitude");
-                dataValue = jsonResponse.getInt("dataValue");
-                dataType = jsonResponse.getString("dataType");
-                dateTime = jsonResponse.getString("dateTime");
-                Float color;
-                if (dataType.equals("signalStrength")) {
-                    if (dataValue == 3) {
-                        color = Float.parseFloat("120.0");
-                    } else if (dataValue == 2) {
-                        color = Float.parseFloat("60.0");
-                    } else if (dataValue == 1) {
-                        color = Float.parseFloat("0.0");
-                    } else {
-                        color = Float.parseFloat("300.0");
-                    }
-                    if (dataValue > 0 && dataValue <= 3) {
-                        mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(var_carrier + ", " +
-                                var_parameter + ", " + dateTime).icon(BitmapDescriptorFactory.defaultMarker(color)));
-                    }
-                } else if (dataType.equals("downloadSpeed")) {
-                    if (dataValue > 6) {
-                        color = Float.parseFloat("120.0");
-                    } else if (dataValue <= 6 && dataValue > 2) {
-                        color = Float.parseFloat("60.0");
-                    } else {
-                        color = Float.parseFloat("0.0");
-                    }
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(var_carrier + ", " +
-                            var_parameter + ", " + dateTime).icon(BitmapDescriptorFactory.defaultMarker(color)));
-                } else if (dataType.equals("uploadSpeed")) {
-                    if (dataValue > 3) {
-                        color = Float.parseFloat("120.0");
-                    } else if (dataValue <= 3 && dataValue > 1) {
-                        color = Float.parseFloat("60.0");
-                    } else {
-                        color = Float.parseFloat("0.0");
-                    }
-                    mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(var_carrier + ", " +
-                            var_parameter + ", " + dateTime).icon(BitmapDescriptorFactory.defaultMarker(color)));
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        if (jsonarray.length() == 0) {
+        if (jsonarray == null ){
+            // check if http request went through successfully
+            Context context = getApplicationContext();
+            CharSequence text = "Error in getting data. No internet connectivity or Server turned off";
+            int duration = Toast.LENGTH_LONG;
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
+            toast.show();
+        } else if (jsonarray.length() == 0) {
+            // check if data available for the given conditions
             Context context = getApplicationContext();
             CharSequence text = "No Data to display for selected carrier and/or selected dates";
             int duration = Toast.LENGTH_LONG;
             Toast toast = Toast.makeText(context, text, duration);
             toast.show();
             toast.show();
+        } else {
+            // create JSON object and display markers based on data
+            JSONObject jsonResponse;
+            for (int i = 0; i < jsonarray.length(); i++) {
+                try {
+                    jsonResponse = jsonarray.getJSONObject(i);
+                    latitude = jsonResponse.getDouble("latitude");
+                    longitude = jsonResponse.getDouble("longitude");
+                    dataValue = jsonResponse.getInt("dataValue");
+                    dataType = jsonResponse.getString("dataType");
+                    dateTime = jsonResponse.getString("dateTime");
+                    Float color;
+                    if (dataType.equals("signalStrength")) {
+                        // use color coding for differentiating signal strength.
+                        if (dataValue == 3) {
+                            // 120.0 is green
+                            color = Float.parseFloat("120.0");
+                        } else if (dataValue == 2) {
+                            // 60.0 is yellow
+                            color = Float.parseFloat("60.0");
+                        } else if (dataValue == 1) {
+                            // 0.0 is red
+                            color = Float.parseFloat("0.0");
+                        } else {
+                            // 300.0 is Magenta
+                            color = Float.parseFloat("300.0");
+                        }
+                        if (dataValue > 0 && dataValue <= 3) {
+                            // Mark the locations on the Map along with other information
+                            mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(var_carrier + ", " +
+                                    var_parameter + ", " + dateTime).icon(BitmapDescriptorFactory.defaultMarker(color)));
+                        }
+                    } else if (dataType.equals("downloadSpeed")) {
+                        // use color coding for differentiating download.
+                        if (dataValue >= 6) {
+                            // 120.0 is green
+                            color = Float.parseFloat("120.0");
+                        } else if (dataValue < 6 && dataValue >= 2) {
+                            // 60.0 is yellow
+                            color = Float.parseFloat("60.0");
+                        } else {
+                            // 0.0 is red
+                            color = Float.parseFloat("0.0");
+                        }
+                        // Mark the locations on the Map along with other information
+                        mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(var_carrier + ", " +
+                                var_parameter + ", " + dateTime).icon(BitmapDescriptorFactory.defaultMarker(color)));
+                    } else if (dataType.equals("uploadSpeed")) {
+                        if (dataValue >= 3) {
+                            // 120.0 is green
+                            color = Float.parseFloat("120.0");
+                        } else if (dataValue < 3 && dataValue >= 1) {
+                            // 60.0 is yellow
+                            color = Float.parseFloat("60.0");
+                        } else {
+                            // 0.0 is red
+                            color = Float.parseFloat("0.0");
+                        }
+                        // Mark the locations on the Map along with other information
+                        mMap.addMarker(new MarkerOptions().position(new LatLng(latitude, longitude)).title(var_carrier + ", " +
+                                var_parameter + ", " + dateTime).icon(BitmapDescriptorFactory.defaultMarker(color)));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-        /*
-        public static final float HUE_AZURE Constant Value: 210.0
-        public static final float HUE_BLUE Constant Value: 240.0
-        public static final float HUE_CYAN Constant Value: 180.0
-        public static final float HUE_GREEN Constant Value: 120.0
-        public static final float HUE_MAGENTA Constant Value: 300.0
-        public static final float HUE_ORANGE Constant Value: 30.0
-        public static final float HUE_RED Constant Value: 0.0
-        public static final float HUE_ROSE Constant Value: 330.0
-        public static final float HUE_VIOLET Constant Value: 270.0
-        public static final float HUE_YELLOW Constant Value: 60.0
-        */
     }
 
     private void centerMapOnMyLocation() {
+        // Function used to center the map based on current user location
+        // Code modified and referenced from stackoverflow.com
 
         mMap.setMyLocationEnabled(true);
 
@@ -235,5 +256,4 @@ public class MapDisplay extends FragmentActivity {
         }
 /////----------------------------------Zooming camera to position user-----------------
     }
-
 }

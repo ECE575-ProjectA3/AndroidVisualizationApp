@@ -25,6 +25,7 @@ public class DateForm extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_date_form);
 
+        // Get the variables passed from the previous activity
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             var_carrier = extras.getString("var_carrier");
@@ -36,21 +37,24 @@ public class DateForm extends ActionBarActivity {
             @Override
             public void onClick(View arg0) {
 
+                // Get the reference ID of toDate and fromDate text fields
                 EditText fromDateText = (EditText) findViewById(R.id.editText_fromDate);
                 EditText toDateText = (EditText) findViewById(R.id.editText_toDate);
 
                 fromDate = fromDateText.getText().toString();
                 toDate = toDateText.getText().toString();
 
-                // validate Date
+                // validate Date using the isValidDate function. If valid proceed to the next activity
                 if (!(isValidDate(fromDate))) {
                     fromDateText.setError("Invalid Date");
                 } else if (!(isValidDate(toDate)))  {
                     toDateText.setError("Invalid Date");
                 } else {
+                    // Call parseInput function to form the http URL
                     parseInput();
+                    /// Create Intent for MapDisplay Activity and Start The Activity.
+                    /// Also pass the carrier selected to the next activity in a variable
                     Intent new_intent = new Intent(DateForm.this,MapDisplay.class);
-                    System.out.println("The URL: "+url);
                     new_intent.putExtra("url", url);
                     new_intent.putExtra("var_carrier", var_carrier);
                     new_intent.putExtra("var_parameter", var_parameter);
@@ -61,6 +65,7 @@ public class DateForm extends ActionBarActivity {
     }
 
     public void parseInput() {
+        // This function forms the http url based on carrier, parameter and date values
         url = "http://ece575a3.ddns.net:8080/";
         url += "request?carrier="+var_carrier + "&type="+var_parameter;
         //only include non-empty parameters
@@ -73,6 +78,7 @@ public class DateForm extends ActionBarActivity {
     }
 
     public static boolean isValidDate(String text) {
+        // This function validates the date passed as string. Referenced from stackoverflow.com
         if (text.equals(""))
             return true;
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
@@ -94,9 +100,8 @@ public class DateForm extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        // Handle action bar item clicks here. The action bar will automatically
+        // handle clicks, as long as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement

@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Toast;
 
 
 public class SignalParameter extends ActionBarActivity {
@@ -17,13 +16,13 @@ public class SignalParameter extends ActionBarActivity {
     private String var_carrier;
     private RadioGroup radioSignalGroup;
     private RadioButton radioSignalButton;
-    private Button btnDisplay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signal_parameter);
 
+        // Get the variables passed from the previous activity
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             var_carrier = extras.getString("var_carrier");
@@ -34,8 +33,9 @@ public class SignalParameter extends ActionBarActivity {
 
     public void addListenerOnButton() {
 
+        // Get the reference ID of Radio group and the button
         radioSignalGroup = (RadioGroup) findViewById(R.id.radioParameters);
-        btnDisplay = (Button) findViewById(R.id.btnDisplay);
+        Button btnDisplay = (Button) findViewById(R.id.btnDisplay);
 
         btnDisplay.setOnClickListener(new View.OnClickListener() {
 
@@ -56,6 +56,8 @@ public class SignalParameter extends ActionBarActivity {
                 } else if (radioSignalButtonValuesStr.equals("Upload Speed")) {
                     radioSignalButtonValue = "uploadSpeed";
                 }
+                /// Create Intent for DateForm Activity and Start The Activity.
+                /// Also pass the carrier selected to the next activity in a variable
                 Intent intent = new Intent(SignalParameter.this, DateForm.class);
                 System.out.println(radioSignalButtonValue);
                 intent.putExtra("var_carrier", var_carrier);
@@ -77,9 +79,9 @@ public class SignalParameter extends ActionBarActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
+        // Handle action bar item clicks here. The action bar will automatically
+        // handle clicks, as long as you specify a parent activity in AndroidManifest.xml.
+
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
