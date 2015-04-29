@@ -5,7 +5,7 @@ android {
         config {
             keyAlias 'AndroidKeyEce575'
             keyPassword 'ece575'
-            storeFile file('C:/Users/saran_000/AndroidStudioProjects/CellularCoverage/android.jks')
+            storeFile file('android.jks')
             storePassword 'ece575'
         }
     }
